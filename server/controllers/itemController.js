@@ -2,7 +2,6 @@ const itemRepo = require('../repositories/itemRepository');
 const storeRepo = require('../repositories/storeRepository');
 const { sendSuccess, sendError } = require('../utils/response');
 const { uploadToCloudinary } = require('../utils/cloudinary');
-const redis = require('../database/redis');
 
 const createItem = async (req, res) => {
     try {
@@ -60,14 +59,7 @@ const getItemsByStoreId = async (req, res) => {
             return sendError(res, 404, "Store doesnt exist");
         }
 
-        const cacheKey = `items:store:${store_id}`;
-        const cached = await redis.get(cacheKey);
-        if (cached) {
-            return sendSuccess(res, 200, "Items found", JSON.parse(cached));
-        }
-
         const items = await itemRepo.getItemsByStoreId(store_id);
-        await redis.set(cacheKey, JSON.stringify(items), 'EX', 60);
         sendSuccess(res, 200, "Items found", items);
     } catch (err) {
         sendError(res, 500, err.message);

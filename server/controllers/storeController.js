@@ -1,16 +1,9 @@
 const storeRepo = require('../repositories/storeRepository');
 const { sendSuccess, sendError } = require('../utils/response');
-const redis = require('../database/redis');
 
 const getAll = async (req, res) => {
     try {
-        const cached = await redis.get('stores');
-        if (cached) {
-            return sendSuccess(res, 200, "Stores found", JSON.parse(cached));
-        }
-
         const stores = await storeRepo.getAllStores();
-        await redis.set('stores', JSON.stringify(stores), 'EX', 60);
         sendSuccess(res, 200, "Stores found", stores);
     } catch (err) {
         sendError(res, 500, err.message);
